@@ -3,6 +3,7 @@ package com.hoonkim.kis.autotrade.auth;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -31,7 +32,7 @@ public class AppSecKey {
 	String appKey;
 	String secretKey;
 	//final static String filePath = "AppSecKey.data";
-	final static String resourceFilePath = "AppSecKey.data";
+	final static String resourceFilePath = System.getProperty("user.home") + File.separator +  "AppSecKey.data";
 
 	public AppSecKey (String appKey, String secretKey) {
 		this.appKey = appKey;
@@ -60,13 +61,9 @@ public class AppSecKey {
         AppSecKey data = null;
         
         // Use the class loader to read from the JAR resources
-        InputStream inputStream = AppSecKey.class.getClassLoader().getResourceAsStream(resourceFilePath);
-        if (inputStream == null) {
-            System.out.println("File not found in resources: " + resourceFilePath);
-            return null;
-        }
+    
 
-        try (InputStreamReader reader = new InputStreamReader(inputStream)) {
+        try (FileReader reader = new FileReader(resourceFilePath)) {
             data = gson.fromJson(reader, AppSecKey.class);
             //System.out.println("Data read successfully.");
         } catch (IOException e) {
