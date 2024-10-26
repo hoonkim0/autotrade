@@ -1,8 +1,5 @@
 package com.hoonkim.kis.autotrade.util;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class TableDisplay {
 
     // Method to display the formatted table

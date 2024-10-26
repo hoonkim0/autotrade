@@ -10,7 +10,6 @@ import com.hoonkim.kis.autotrade.auth.AppSecKey;
 import com.hoonkim.kis.autotrade.query.QueryExecutor;
 import com.hoonkim.kis.autotrade.sql.MasterDataReader;
 import com.hoonkim.kis.autotrade.util.LocalTime;
-import com.hoonkim.kis.autotrade.sql.KisApi;
 
 public class Kospi100 {
 

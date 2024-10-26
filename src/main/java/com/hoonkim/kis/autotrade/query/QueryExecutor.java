@@ -10,8 +10,6 @@ import com.hoonkim.kis.autotrade.auth.AccessToken;
 import com.hoonkim.kis.autotrade.auth.AppSecKey;
 import com.hoonkim.kis.autotrade.sql.ApiField;
 import com.hoonkim.kis.autotrade.sql.MasterDataReader;
-import com.hoonkim.kis.autotrade.util.TableDisplay;
-
 
 public class QueryExecutor extends GetQuery {
 

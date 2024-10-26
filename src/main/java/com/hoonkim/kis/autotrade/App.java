@@ -1,30 +1,16 @@
 package com.hoonkim.kis.autotrade;
 
-import java.util.Map;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.hoonkim.kis.autotrade.auth.AccessToken;
+import com.hoonkim.kis.autotrade.auth.Account;
 import com.hoonkim.kis.autotrade.auth.AppSecKey;
-import com.hoonkim.kis.autotrade.order.BuyOrder;
-import com.hoonkim.kis.autotrade.order.SellOrder;
 //import com.hoonkim.kis.autotrade.query.ConfiguredQuery;
 import com.hoonkim.kis.autotrade.query.QueryExecutor;
-import com.hoonkim.kis.autotrade.sql.ApiField;
-import com.hoonkim.kis.autotrade.sql.FieldKey;
 import com.hoonkim.kis.autotrade.sql.MasterDataReader;
-import com.hoonkim.kis.autotrade.sql.KisApi;
 import com.hoonkim.kis.autotrade.util.LocalTime;
 
-import java.time.ZonedDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 
 public class App {
 
@@ -40,10 +26,11 @@ public class App {
 			Thread.sleep(5000);
 		}
 
-			//BuyOrder bo =  new BuyOrder (aToken, key, "64520366", "01", "005930","2", "40000");
+		
+			//BuyOrder bo =  new BuyOrder (aToken, key, Account.getAccountNo(), "01", "005930","2", "40000");
 			//bo.execute();	
 			
-			//SellOrder so =  new SellOrder (aToken, key, "64520366", "01", "900270","2");
+			//SellOrder so =  new SellOrder (aToken, key, Account.getAccountNo(), "01", "900270","2");
 			//so.execute();	
 			
 			
@@ -54,7 +41,7 @@ public class App {
 	static void currentAccountBalance(AccessToken aToken, AppSecKey key, MasterDataReader hdb) {
 
 		String[] params = new String[2];
-		params[0] = new String("64520366");
+		params[0] = new String(Account.getAccountNo());
 		params[1] = new String("01");
 		QueryExecutor upl3 = new QueryExecutor(hdb, "TTTC8434R", aToken, key, params);
 		JsonObject jsonObject = upl3.executeQuery();
@@ -86,7 +73,7 @@ public class App {
 		}
 
 		params = new String[2];
-		params[0] = new String("64520366");
+		params[0] = new String(Account.getAccountNo());
 		params[1] = new String("01");
 		upl3 = new QueryExecutor(hdb, "TTTC8036R", aToken, key, params);
 		jsonObject = upl3.executeQuery();
@@ -146,7 +133,7 @@ public class App {
 		upl3.execute();
 
 		params = new String[2];
-		params[0] = new String("64520366");
+		params[0] = new String(Account.getAccountNo());
 		params[1] = new String("01");
 		upl3 = new QueryExecutor(hdb, "TTTC8434R", aToken, key, params);
 		upl3.execute();
@@ -165,7 +152,7 @@ public class App {
 		upl3.execute();
 
 		params = new String[2];
-		params[0] = new String("64520366");
+		params[0] = new String(Account.getAccountNo());
 		params[1] = new String("01");
 		upl3 = new QueryExecutor(hdb, "TTTC8494R", aToken, key, params);
 		upl3.execute();
@@ -184,14 +171,14 @@ public class App {
 		params = new String[4];
 		params[0] = LocalTime.getDate();
 		params[1] = LocalTime.getDate();
-		params[2] = new String("64520366");
+		params[2] = new String(Account.getAccountNo());
 		params[3] = new String("01");
 		upl3 = new QueryExecutor(hdb, "CTSC0004R", aToken, key, params);
 		upl3.execute();
 		
 		
 		params = new String[2];
-		params[0] = new String("64520366");
+		params[0] = new String(Account.getAccountNo());
 		params[1] = new String("01");
 		upl3 = new QueryExecutor(hdb, "TTTC8036R", aToken, key, params);
 		upl3.execute();
