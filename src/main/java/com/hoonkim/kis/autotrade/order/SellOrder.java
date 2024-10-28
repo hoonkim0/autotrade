@@ -13,8 +13,8 @@ public class SellOrder extends PostOrder {
 
 	}
 	
-	public SellOrder(AccessToken aToken, AppSecKey key, String CANO, String ACNT_PRDT_CD, String PDNO, String ORD_DVSN, String ORD_QTY, String ORD_UNPR) {
-		this (CANO, ACNT_PRDT_CD, PDNO, ORD_DVSN, ORD_QTY, ORD_UNPR);
+	public SellOrder(AccessToken aToken, AppSecKey key, String CANO, String ACNT_PRDT_CD, String PDNO, String ORD_QTY, String ORD_UNPR) {
+		this (CANO, ACNT_PRDT_CD, PDNO, "00", ORD_QTY, ORD_UNPR);
 		this.aToken = aToken;
 		this.key = key;
 	}

@@ -72,9 +72,7 @@ public abstract class GetQuery {
 		String returnData = "";
 
 		try {
-			
-
-			
+				
 			url = new URL(fullUrl + getParamData());
 			if (_debug) System.out.println ("Calling : " + url);
 			conn = (HttpURLConnection) url.openConnection();
@@ -118,7 +116,8 @@ public abstract class GetQuery {
 
 				
 			} catch (IOException e) {
-				throw new RuntimeException("API Fail ** FUCK **.", e);
+				e.printStackTrace();
+				//throw new RuntimeException("API Fail ** FUCK **.", e);
 			}
 		}
 		

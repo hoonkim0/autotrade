@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.hoonkim.kis.autotrade.auth.AccessToken;
 import com.hoonkim.kis.autotrade.auth.Account;
 import com.hoonkim.kis.autotrade.auth.AppSecKey;
+import com.hoonkim.kis.autotrade.order.SellOrder;
 //import com.hoonkim.kis.autotrade.query.ConfiguredQuery;
 import com.hoonkim.kis.autotrade.query.QueryExecutor;
 import com.hoonkim.kis.autotrade.sql.MasterDataReader;
@@ -23,7 +24,7 @@ public class App {
 		while (true) {
 			LocalTime.printLocalTime();
 			currentAccountBalance(aToken, key, hdb);
-			Thread.sleep(5000);
+			Thread.sleep(500);
 		}
 
 		
@@ -60,8 +61,17 @@ public class App {
 				String prpr = item.get("prpr").getAsString(); // 현재가
 				String evlu_pfls_amt = item.get("evlu_pfls_amt").getAsString(); // 평가손익금액
 
+				double profit = (100d * (Double.valueOf(prpr) / Double.valueOf(pchs_avg_pric))) - 100d;
+				String profitS = String.format("%.1f", profit);
+				
 				System.out.println(pdno + " / " + prdt_name + " / " + hldg_qty + " / "
-						+ Float.valueOf(pchs_avg_pric).intValue() + " / " + prpr + " / " + evlu_pfls_amt);
+						+ Float.valueOf(pchs_avg_pric).intValue() + " / " + prpr + " / " + evlu_pfls_amt + " / " + profitS + "%");
+				
+				if (profit > 1d || profit < -3d) {   // 익절 1%   손절 4=3%
+					Integer sellPrice = (int) (Double.valueOf(prpr)  * 0.95d);
+					SellOrder so =  new SellOrder (aToken, key, Account.getAccountNo(), "01", pdno, hldg_qty);
+					so.execute();	
+				}
 			}
 
 		}
