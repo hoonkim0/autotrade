@@ -17,26 +17,27 @@ public class App {
 
 	public static void main(String[] args) throws Exception {
 
-		AppSecKey key = AppSecKey.readFromFile();
-		AccessToken aToken = new AccessToken(key);
-		MasterDataReader hdb = new MasterDataReader();
+		if (LocalTime.getDayofWeek().toUpperCase().equals ("SAT") || LocalTime.getDayofWeek().toUpperCase().equals ("SUN")) System.exit(0);
+		
+		String ts = LocalTime.getLocalTime();
+		int ti = Integer.valueOf(ts);
+		
+		if (ti > 90000 && ti < 153000) {
 
-		while (true) {
-			LocalTime.printLocalTime();
-			currentAccountBalance(aToken, key, hdb);
-			Thread.sleep(500);
+			AppSecKey key = AppSecKey.readFromFile();
+			AccessToken aToken = new AccessToken(key);
+			MasterDataReader hdb = new MasterDataReader();
+			
+			while (true) {
+				String tcs = LocalTime.getLocalTime();
+				if (ts.charAt(ts.length() - 3) != tcs.charAt(tcs.length() - 3))  System.exit(0);
+				LocalTime.printLocalTime();
+				currentAccountBalance(aToken, key, hdb);
+				//Thread.sleep(500);
+			}
+		} else {
+			System.exit(0);
 		}
-
-		
-			//BuyOrder bo =  new BuyOrder (aToken, key, Account.getAccountNo(), "01", "005930","2", "40000");
-			//bo.execute();	
-			
-			//SellOrder so =  new SellOrder (aToken, key, Account.getAccountNo(), "01", "900270","2");
-			//so.execute();	
-			
-			
-		
-		//test (aToken, key, hdb);
 	}
 
 	static void currentAccountBalance(AccessToken aToken, AppSecKey key, MasterDataReader hdb) {
@@ -67,8 +68,8 @@ public class App {
 				System.out.println(pdno + " / " + prdt_name + " / " + hldg_qty + " / "
 						+ Float.valueOf(pchs_avg_pric).intValue() + " / " + prpr + " / " + evlu_pfls_amt + " / " + profitS + "%");
 				
-				if (profit > 1d || profit < -3d) {   // 익절 1%   손절 4=3%
-					Integer sellPrice = (int) (Double.valueOf(prpr)  * 0.95d);
+				if (profit > 2.0d  ) {  //|| profit < -15d) {  
+					//Integer sellPrice = (int) (Double.valueOf(prpr)  * 0.95d);
 					SellOrder so =  new SellOrder (aToken, key, Account.getAccountNo(), "01", pdno, hldg_qty);
 					so.execute();	
 				}
