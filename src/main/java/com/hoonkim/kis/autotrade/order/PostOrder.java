@@ -10,9 +10,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.hoonkim.kis.autotrade.auth.AccessToken;
 import com.hoonkim.kis.autotrade.auth.AppSecKey;
+import com.hoonkim.kis.autotrade.util.LocalTime;
 
 public abstract class PostOrder {
 
@@ -35,11 +38,12 @@ public abstract class PostOrder {
 		requestBody.put("ALGO_NO","");
 		
 	}
-	public void execute () {
+	public String execute () {
 		
         // Convert the Map to JSON using Gson
         Gson gson = new Gson();
         String json = gson.toJson(this.requestBody);
+        String orderNo = new String("");
         
         // Create the HttpClient instance
         HttpClient client = HttpClient.newHttpClient();
@@ -70,7 +74,13 @@ public abstract class PostOrder {
             String msg_cd = responseObject.get("msg_cd").getAsString();
             
             System.out.println (rt_cd + " / " + msg_cd + " / " + msg);
-
+           
+            if (rt_cd.equals("0")) {
+            	
+            	JsonObject obj = responseObject.getAsJsonObject("output");
+            	orderNo = LocalTime.getDate() + "-" + obj.get("KRX_FWDG_ORD_ORGNO").getAsString().trim() + "-" + obj.get("ODNO").getAsString().trim();
+   
+            }  
 
             
         } catch (IOException ioe) {
@@ -78,5 +88,7 @@ public abstract class PostOrder {
         } catch (InterruptedException intE) {
         	
         }
+        
+        return orderNo;
 	}
 }

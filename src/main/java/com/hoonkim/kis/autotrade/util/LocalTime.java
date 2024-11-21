@@ -3,6 +3,7 @@ package com.hoonkim.kis.autotrade.util;
 import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 
 public class LocalTime {
 
@@ -17,6 +18,31 @@ public class LocalTime {
         // Print the current time in Korea
         System.out.println("\nCurrent time in Korea: " + formattedKoreaTime);
 	}
+	
+	public static String getLocalDateTime () {
+        // Get the current time in Korea
+        ZonedDateTime koreaTime = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+        
+        // Format the time in a readable format
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formattedKoreaTime = koreaTime.format(formatter);
+        
+        // Return the current time in Korea
+        return formattedKoreaTime;
+	}
+	
+	public static String convertTimestamp(String timestamp) {
+        // Define the input format
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        // Define the output format
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        // Parse the input timestamp
+        LocalDateTime dateTime = LocalDateTime.parse(timestamp, inputFormatter);
+
+        // Format to the desired output format
+        return dateTime.format(outputFormatter);
+    }
 	
 	public static String getLocalTime() {
         // Get the current time in Korea

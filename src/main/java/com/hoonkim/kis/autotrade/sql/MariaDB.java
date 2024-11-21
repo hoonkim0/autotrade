@@ -7,6 +7,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class MariaDB {
 
@@ -15,6 +19,8 @@ public class MariaDB {
 	String user;
 	String passwd;
 	String db;
+	
+	Connection conn;
 	
 	//final static String filePath = "HDBconnect.data";
 	final static String resourceFilePath = System.getProperty("user.home") + File.separator + "MDBconnect.data";
@@ -104,4 +110,39 @@ public class MariaDB {
         return data;
     }
     
+    public void connect () {
+    	
+		conn = null;
+
+		try {
+
+			conn = DriverManager.getConnection(
+					"jdbc:mysql://" + this.getServer() + ":" + this.getPort() + "/" + this.getDb(), this.getUser(),
+					this.getPasswd());
+			conn.setAutoCommit(false);
+
+		} catch (SQLException e) {
+			System.err.println("Connection Failed:");
+			System.err.println(e);
+			System.exit(1);
+		}
+		
+    }
+    
+    public void disconnect () {
+		try {
+
+			if (!conn.isClosed()) conn.close();
+
+		} catch (SQLException e) {
+			System.err.println("Disconnection Failed:");
+			System.err.println(e);
+			//System.exit(1);
+		}
+			
+    }
+    
+    public Connection getConnection() {
+    	return this.conn;
+    }
 }
