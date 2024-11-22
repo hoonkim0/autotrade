@@ -207,9 +207,10 @@ public class Scheduler {
 
 			while (true) {
 				String tcs = LocalTime.getLocalTime();
-				if (ts.charAt(ts.length() - 3) != tcs.charAt(tcs.length() - 3))
+				if (ts.charAt(ts.length() - 3) != tcs.charAt(tcs.length() - 3)) {
+					if (!getConnection().isClosed()) getConnection().close();
 					System.exit(0);
-				// LocalTime.printLocalTime();
+				}
 				currentAccountBalance();
 				// Thread.sleep(500);
 			}
