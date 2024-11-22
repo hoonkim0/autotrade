@@ -81,7 +81,7 @@ public class Scheduler {
 		return prpr;
 	}
 	
-	void placeBuyOrder(String pdNo, String qty) {
+	String placeBuyOrder(String pdNo, String qty) {
 
 		BuyOrder bo = new BuyOrder(aToken, key, Account.getAccountNo(), "01", pdNo, qty);
 		String ordno = bo.execute();
@@ -98,6 +98,8 @@ public class Scheduler {
 				getConnection().commit();
 
 				updateOrder.close();
+				
+				return new String(ordno);
 
 			} catch (SQLException e) {
 				System.err.println("Connection Failed:");
@@ -105,6 +107,8 @@ public class Scheduler {
 				System.exit(1);
 			}
 		}
+		
+		return new String("");
 
 	}
 	
@@ -128,39 +132,43 @@ public class Scheduler {
 				int lmt = resultSet.getInt(5);
 				int qty = resultSet.getInt(6);
 				
+				String ordNo = new String ("");
 				if ( lmt != 0 ) { 				
-					if ( getCurrentStockPrice(pd, aToken, key, hdb) < lmt) placeBuyOrder (pd, Integer.valueOf(qty).toString());
+					if ( getCurrentStockPrice(pd, aToken, key, hdb) < lmt) ordNo = placeBuyOrder (pd, Integer.valueOf(qty).toString());
 				} else {
-					placeBuyOrder (pd, Integer.valueOf(qty).toString());
+					ordNo = placeBuyOrder (pd, Integer.valueOf(qty).toString());
 				}
 				
+				if ( !ordNo.equals("")) {
 				
-				if (rpt <= 1) {
-					PreparedStatement dstmt = getConnection().prepareStatement("DELETE FROM SCHEDULE WHERE SCHEDULETIME = ? AND PDNO = ? AND RPT = ? AND DELAY = ? AND LMT = ? AND QTY = ?");
-					dstmt.setTimestamp(1, ts);
-					dstmt.setString(2, pd);
-					dstmt.setInt(3, rpt);
-					dstmt.setInt(4, delay);
-					dstmt.setInt(5, lmt);
-					dstmt.setInt(6, qty);
-					dstmt.execute();
-					dstmt.close();
-					getConnection().commit();
-				} else {
-					PreparedStatement ustmt = getConnection().prepareStatement("UPDATE SCHEDULE SET SCHEDULETIME = DATE_ADD(?, INTERVAL ? MINUTE), " 
-							+ " RPT = RPT - 1"
-							+ " WHERE SCHEDULETIME = ? AND PDNO = ? AND RPT = ? AND DELAY = ? AND LMT = ? AND QTY = ?");
-					ustmt.setTimestamp(1, Timestamp.valueOf(ltimestamp));
-					ustmt.setInt(2, delay);
-					ustmt.setTimestamp(3, ts);
-					ustmt.setString(4, pd);
-					ustmt.setInt(5, rpt);
-					ustmt.setInt(6, delay);
-					ustmt.setInt(7, lmt);
-					ustmt.setInt(8, qty);
-					ustmt.execute();
-					ustmt.close();
-					getConnection().commit();
+					if (rpt <= 1) {
+						PreparedStatement dstmt = getConnection().prepareStatement(
+								"DELETE FROM SCHEDULE WHERE SCHEDULETIME = ? AND PDNO = ? AND RPT = ? AND DELAY = ? AND LMT = ? AND QTY = ?");
+						dstmt.setTimestamp(1, ts);
+						dstmt.setString(2, pd);
+						dstmt.setInt(3, rpt);
+						dstmt.setInt(4, delay);
+						dstmt.setInt(5, lmt);
+						dstmt.setInt(6, qty);
+						dstmt.execute();
+						dstmt.close();
+						getConnection().commit();
+					} else {
+						PreparedStatement ustmt = getConnection().prepareStatement(
+								"UPDATE SCHEDULE SET SCHEDULETIME = DATE_ADD(?, INTERVAL ? MINUTE), " + " RPT = RPT - 1"
+										+ " WHERE SCHEDULETIME = ? AND PDNO = ? AND RPT = ? AND DELAY = ? AND LMT = ? AND QTY = ?");
+						ustmt.setTimestamp(1, Timestamp.valueOf(ltimestamp));
+						ustmt.setInt(2, delay);
+						ustmt.setTimestamp(3, ts);
+						ustmt.setString(4, pd);
+						ustmt.setInt(5, rpt);
+						ustmt.setInt(6, delay);
+						ustmt.setInt(7, lmt);
+						ustmt.setInt(8, qty);
+						ustmt.execute();
+						ustmt.close();
+						getConnection().commit();
+					}
 				}
 				
 			}
