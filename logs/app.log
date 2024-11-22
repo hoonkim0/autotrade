@@ -1,0 +1,4 @@
+2024-11-22 10:55:06 [main] INFO  com.hoonkim.kis.autotrade.App - This is an INFO message
+2024-11-22 10:55:06 [main] WARN  com.hoonkim.kis.autotrade.App - This is a WARN message
+2024-11-22 10:55:06 [main] ERROR com.hoonkim.kis.autotrade.App - This is an ERROR message
+2024-11-22 10:55:06 [main] FATAL com.hoonkim.kis.autotrade.App - This is a FATAL message

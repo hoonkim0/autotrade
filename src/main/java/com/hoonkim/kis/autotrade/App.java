@@ -1,25 +1,7 @@
 package com.hoonkim.kis.autotrade;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Hashtable;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.hoonkim.kis.autotrade.auth.AccessToken;
-import com.hoonkim.kis.autotrade.auth.Account;
 import com.hoonkim.kis.autotrade.auth.AppSecKey;
-import com.hoonkim.kis.autotrade.order.BuyOrder;
-import com.hoonkim.kis.autotrade.order.OrderProcessor;
-import com.hoonkim.kis.autotrade.order.SellOrder;
-//import com.hoonkim.kis.autotrade.query.ConfiguredQuery;
-import com.hoonkim.kis.autotrade.query.QueryExecutor;
-import com.hoonkim.kis.autotrade.sql.MariaDB;
 import com.hoonkim.kis.autotrade.sql.MasterDataReader;
 import com.hoonkim.kis.autotrade.util.LocalTime;
 import org.apache.commons.cli.*;
@@ -163,10 +145,6 @@ public class App {
 		}
 		return true;
 	}
-
-
-
-
 
 
 
