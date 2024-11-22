@@ -80,7 +80,7 @@ public class App {
 			}
 			if (cmd.hasOption("s")) {
 				start = cmd.getOptionValue("s");
-			}
+			} else start = LocalTime.getLocalDateTime14();
 		} catch (ParseException e) {
 			System.out.println("Error parsing arguments: " + e.getMessage());
 			System.exit(1);
@@ -122,7 +122,7 @@ public class App {
 	static boolean verifyCmd(String c, String p, String q, String r, String d, String l, String s) {
 
 		if (c.equals("") || p.equals("") || q.equals("") || s.equals("")) {
-			System.out.println("Error parsing arguments: the required argument(s) missing : -c, -p, -q, -s");
+			System.out.println("Error parsing arguments: the required argument(s) missing : -c, -p, -q");
 			return false;
 		}
 		if (!c.equals("buy") && !c.equals("sell")) {

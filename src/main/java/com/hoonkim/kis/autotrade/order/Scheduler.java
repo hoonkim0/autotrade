@@ -128,10 +128,12 @@ public class Scheduler {
 				int lmt = resultSet.getInt(5);
 				int qty = resultSet.getInt(6);
 				
-				if ( lmt != 0 ) 				
+				if ( lmt != 0 ) { 				
 					if ( getCurrentStockPrice(pd, aToken, key, hdb) < lmt) placeBuyOrder (pd, Integer.valueOf(qty).toString());
-				else 
+				} else {
 					placeBuyOrder (pd, Integer.valueOf(qty).toString());
+				}
+				
 				
 				if (rpt <= 1) {
 					PreparedStatement dstmt = getConnection().prepareStatement("DELETE FROM SCHEDULE WHERE SCHEDULETIME = ? AND PDNO = ? AND RPT = ? AND DELAY = ? AND LMT = ? AND QTY = ?");
@@ -145,16 +147,17 @@ public class Scheduler {
 					dstmt.close();
 					getConnection().commit();
 				} else {
-					PreparedStatement ustmt = getConnection().prepareStatement("UPDATE SCHEDULE SET SCHEDULETIME = DATE_ADD(SCHEDULETIME, INTERVAL ? MINUTE), " 
+					PreparedStatement ustmt = getConnection().prepareStatement("UPDATE SCHEDULE SET SCHEDULETIME = DATE_ADD(?, INTERVAL ? MINUTE), " 
 							+ " RPT = RPT - 1"
 							+ " WHERE SCHEDULETIME = ? AND PDNO = ? AND RPT = ? AND DELAY = ? AND LMT = ? AND QTY = ?");
-					ustmt.setInt(1, delay);
-					ustmt.setTimestamp(2, ts);
-					ustmt.setString(3, pd);
-					ustmt.setInt(4, rpt);
-					ustmt.setInt(5, delay);
-					ustmt.setInt(6, lmt);
-					ustmt.setInt(7, qty);
+					ustmt.setTimestamp(1, Timestamp.valueOf(ltimestamp));
+					ustmt.setInt(2, delay);
+					ustmt.setTimestamp(3, ts);
+					ustmt.setString(4, pd);
+					ustmt.setInt(5, rpt);
+					ustmt.setInt(6, delay);
+					ustmt.setInt(7, lmt);
+					ustmt.setInt(8, qty);
 					ustmt.execute();
 					ustmt.close();
 					getConnection().commit();
