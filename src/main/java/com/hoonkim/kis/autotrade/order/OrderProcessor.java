@@ -47,7 +47,7 @@ public class OrderProcessor {
 
 				Statement stmt = getConnection().createStatement();
 				ResultSet resultSet = stmt.executeQuery(
-						"SELECT ORDNO, PDNO, QTY, TPRICE FROM ORDERS WHERE ACTIVE = 'X' AND SORDNO IS NULL AND SPRICE IS NULL AND BCOMPLETE = 'X' FOR UPDATE");
+						"SELECT ORDNO, PDNO, QTY, TPRICE FROM ORDERS WHERE ACTIVE = 'X' AND ( SORDNO IS NULL OR SORDNO ='" + "')  AND SPRICE IS NULL AND BCOMPLETE = 'X' FOR UPDATE");
 				while (resultSet.next()) {
 
 					String orderNo = resultSet.getString(1);
@@ -61,14 +61,15 @@ public class OrderProcessor {
 						SellOrder so = new SellOrder(this.aToken, this.key, this.CANO, this.ACNT_PRDT_CD, PDNO, qty);
 						String sOrderNo = so.execute();
 
-						PreparedStatement updateOrder = getConnection()
-								.prepareStatement("UPDATE ORDERS SET SORDNO = ? WHERE ORDNO = ?");
-						updateOrder.setString(1, sOrderNo);
-						updateOrder.setString(2, orderNo);
-						updateOrder.executeUpdate();
-						getConnection().commit();
+						if (!sOrderNo.equals("")) {
+							PreparedStatement updateOrder = getConnection().prepareStatement("UPDATE ORDERS SET SORDNO = ? WHERE ORDNO = ?");
+							updateOrder.setString(1, sOrderNo);
+							updateOrder.setString(2, orderNo);
+							updateOrder.executeUpdate();
+							getConnection().commit();
 
-						updateOrder.close();
+							updateOrder.close();
+						}
 					}
 
 				}

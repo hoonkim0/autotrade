@@ -342,8 +342,9 @@ public class Scheduler {
 					if (getConnection() != null) {
 						try {
 							PreparedStatement updateOrder = getConnection()
-									.prepareStatement("DELETE FROM ORDERS WHERE SORDNO = ?");
-							updateOrder.setString(1, uniqueKey);
+									.prepareStatement("UPDATE ORDERS SET ACTIVE ='C', SPRICE = ?, SCOMPLETE = 'X' WHERE SORDNO = ?");
+							updateOrder.setString(1, avg_prvs);
+							updateOrder.setString(2, uniqueKey);
 							updateOrder.executeUpdate();
 							getConnection().commit();
 
@@ -396,7 +397,7 @@ public class Scheduler {
 					int tiPrice = (int) tPrice;
 					String tPriceString = Integer.valueOf(tiPrice).toString();
 
-					if (getConnection() != null) {
+					if (ord_qty.trim().equals(tot_ccld_qty.trim()) && getConnection() != null) {
 						try {
 							PreparedStatement updateOrder = getConnection().prepareStatement(
 									"UPDATE ORDERS SET BPRICE = ?, TPRICE = ?, ACTIVE = ?, BCOMPLETE = ? WHERE ORDNO = ? AND ACTIVE IS NULL AND BPRICE IS NULL AND TPRICE IS NULL");
