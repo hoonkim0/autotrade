@@ -205,6 +205,9 @@ public class Scheduler {
 
 			checkBuySchedule();
 
+			checkSellOrder();
+			checBuyOrder();
+			
 			while (true) {
 				String tcs = LocalTime.getLocalTime();
 				if (ts.charAt(ts.length() - 3) != tcs.charAt(tcs.length() - 3)) {
@@ -291,9 +294,6 @@ public class Scheduler {
 					+ ord_unpr + " / " + tot_ccld_qty + " / " + Scheduler.getCurrentStockPrice(pdno, aToken, key, hdb));
 
 		}
-
-		checkSellOrder();
-		checBuyOrder();
 
 	}
 
