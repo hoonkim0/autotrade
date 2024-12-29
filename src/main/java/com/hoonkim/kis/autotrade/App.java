@@ -75,6 +75,9 @@ public class App {
 		if (command.equals("cron")) {
 			// Perform the main cron job
 			scheduler.cron();
+		}
+		else if (command.equals("updateSchedule")) {
+			scheduler.updateTargetPrice();
 		} else if (verifyCmd(command, pdno, qty, repeat, delay, limit, start)) {
 			rpt = repeat.equals("") ? 1 : Integer.parseInt(repeat);
 			dly = delay.equals("") ? 0 : Integer.parseInt(delay);

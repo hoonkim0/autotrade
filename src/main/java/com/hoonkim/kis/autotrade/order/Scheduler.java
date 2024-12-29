@@ -423,4 +423,67 @@ public class Scheduler {
 
 	}
 
+	public void updateTargetPrice () {
+
+		try {
+
+			PreparedStatement pstmt = getConnection().prepareStatement(
+					"SELECT DISTINCT PDNO FROM SCHEDULE");
+			
+			ResultSet resultSet = pstmt.executeQuery();
+			while (resultSet.next()) {
+
+				String pd = resultSet.getString(1);
+				
+				String[] params = new String[2];
+				params[0] = pd;
+				params[1] = "D";
+
+				QueryExecutor upl3 = new QueryExecutor(hdb, "FHKST01010400", aToken, key, params);
+				JsonObject output = upl3.executeQuery();
+				
+				JsonArray outputArray1 = output.getAsJsonArray("output");
+				
+				int cnt = 0;
+				int sum = 0;
+				
+				for (JsonElement element : outputArray1) {
+					JsonObject item = element.getAsJsonObject();
+
+					String stck_bsop_date = item.get("stck_bsop_date").getAsString(); // 주식 영업 일자
+					String stck_clpr = item.get("stck_clpr").getAsString(); // 종가 
+					
+					//System.out.println (pd + " / " + stck_bsop_date + " / " + stck_clpr);
+					cnt++;
+					sum += Integer.valueOf(stck_clpr);
+				}
+				
+				int avgPrice = sum / cnt;
+				//System.out.println (pd + " / " +  avgPrice);
+				
+				PreparedStatement updateSchedule = getConnection().prepareStatement(
+						"UPDATE SCHEDULE SET LMT = ? WHERE PDNO = ?");
+				updateSchedule.setString(1, avgPrice + "");
+				updateSchedule.setString(2, pd);
+				updateSchedule.execute();
+				getConnection().commit();
+
+				updateSchedule.close();
+				
+			}
+			
+			resultSet.close();
+			pstmt.close();
+		} catch (Exception e) {
+			System.err.println(e);
+		}
+		
+		
+		
+		
+		
+
+		
+	}
+	
 }
