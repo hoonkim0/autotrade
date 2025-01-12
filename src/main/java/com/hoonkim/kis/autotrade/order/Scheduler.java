@@ -196,7 +196,7 @@ public class Scheduler {
 		int ti = Integer.valueOf(ts);
 
 		boolean printed = false;
-		if (ti > 90000 && ti < 153000) {
+		if (ti > 90000 && ti < 160000) {
 
 			if (!printed) {
 				LocalTime.printLocalTime();
@@ -342,7 +342,7 @@ public class Scheduler {
 					if (getConnection() != null) {
 						try {
 							PreparedStatement updateOrder = getConnection()
-									.prepareStatement("UPDATE ORDERS SET ACTIVE ='C', SPRICE = ?, SCOMPLETE = 'X' WHERE SORDNO = ?");
+									.prepareStatement("UPDATE ORDERS SET ACTIVE ='C', SPRICE = ?, SCOMPLETE = 'X' WHERE SORDNO = ? AND ACTIVE ='X' AND SCOMPLETE IS NULL");
 							updateOrder.setString(1, avg_prvs);
 							updateOrder.setString(2, uniqueKey);
 							updateOrder.executeUpdate();
@@ -444,46 +444,167 @@ public class Scheduler {
 				
 				JsonArray outputArray1 = output.getAsJsonArray("output");
 				
-				int cnt = 0;
-				int sum = 0;
+				//int cnt = 0;
+				//int sum = 0;
+				
+				double sumF5 = 0D;
+				double cntF5 = 1D;
+				
+				double sumF10 = 0D;
+				double cntF10 = 1D;
+				
+				double sumF15 = 0D;
+				double cntF15 = 1D;
+				
+				double sumF20 = 0D;
+				double cntF20 = 1D;
+				
+				double sumF25 = 0D;
+				double cntF25 = 1D;
+				
+				double sumF30 = 0D;
+				double cntF30 = 1D;
+				
+				int i = 0;
+				
+				double cPrice = 0D;
 				
 				for (JsonElement element : outputArray1) {
 					JsonObject item = element.getAsJsonObject();
 
 					String stck_bsop_date = item.get("stck_bsop_date").getAsString(); // 주식 영업 일자
 					String stck_clpr = item.get("stck_clpr").getAsString(); // 종가 
+					String acml_vol = item.get("acml_vol").getAsString(); // 누적거래량
 					
-					//System.out.println (pd + " / " + stck_bsop_date + " / " + stck_clpr);
-					cnt++;
-					sum += Integer.valueOf(stck_clpr);
+					if (i++ == 0) cPrice =  Double.valueOf(stck_clpr);
+					if (i <=5 ) {
+						sumF5 +=  Double.valueOf(stck_clpr) * Double.valueOf(acml_vol) ;
+						cntF5 +=  Double.valueOf(acml_vol) ;
+					}
+					if (i <=10 ) {
+						sumF10 +=  Double.valueOf(stck_clpr) * Double.valueOf(acml_vol) ;
+						cntF10 +=  Double.valueOf(acml_vol) ;
+					}
+					if (i <=15 ) {
+						sumF15 +=  Double.valueOf(stck_clpr) * Double.valueOf(acml_vol) ;
+						cntF15 +=  Double.valueOf(acml_vol) ;
+					}
+					if (i <=20 ) {
+						sumF20 +=  Double.valueOf(stck_clpr) * Double.valueOf(acml_vol) ;
+						cntF20 +=  Double.valueOf(acml_vol) ;
+					}
+					if (i <=25 ) {
+						sumF25 +=  Double.valueOf(stck_clpr) * Double.valueOf(acml_vol) ;
+						cntF25 +=  Double.valueOf(acml_vol) ;
+					}
+					
+					sumF30 +=  Double.valueOf(stck_clpr) * Double.valueOf(acml_vol) ;
+					cntF30 +=  Double.valueOf(acml_vol) ;
+							
+					//cnt++;
+					//sum += Integer.valueOf(stck_clpr);
 				}
+
+				double avgPrice = 0D;
+				double avgPrice5 = sumF5 / cntF5;  	   avgPrice = Math.max(avgPrice, avgPrice5);
+				double avgPrice10 = sumF10 / cntF10;	avgPrice = Math.max(avgPrice, avgPrice10);
+				double avgPrice15 = sumF15 / cntF15;	avgPrice = Math.max(avgPrice, avgPrice15);
+				double avgPrice20 = sumF20 / cntF20;	avgPrice = Math.max(avgPrice, avgPrice20);
+				double avgPrice25 = sumF25 / cntF25;	avgPrice = Math.max(avgPrice, avgPrice25);
+				double avgPrice30 = sumF30 / cntF30;	avgPrice = Math.max(avgPrice, avgPrice30);
 				
-				int avgPrice = sum / cnt;
-				//System.out.println (pd + " / " +  avgPrice);
+				//int delay = 60;
+					
+				System.out.println (pd + " / " + cPrice + 
+						" / " + avgPrice + 
+						" / " + avgPrice5 + 
+						" / " + avgPrice10 + 
+						" / " + avgPrice15 + 
+						" / " + avgPrice20 + 
+						" / " + avgPrice25 + 
+						" / " + avgPrice30 
+						);
+				
 				
 				PreparedStatement updateSchedule = getConnection().prepareStatement(
-						"UPDATE SCHEDULE SET LMT = ? WHERE PDNO = ?");
+							"UPDATE SCHEDULE SET LMT = ? WHERE PDNO = ?");
 				updateSchedule.setString(1, avgPrice + "");
 				updateSchedule.setString(2, pd);
+					
 				updateSchedule.execute();
 				getConnection().commit();
 
 				updateSchedule.close();
 				
+				
+				// Test
+				String[] times = new String[14];
+				times[0] = "092900";
+				times[1] = "095900";
+				times[2] = "102900";
+				times[3] = "105900";
+				times[4] = "112900";
+				times[5] = "115900";
+				times[6] = "122900";
+				times[7] = "125900";
+				times[8] = "132900";
+				times[9] = "135900";
+				times[10] = "142900";
+				times[11] = "145900";		
+				times[12] = "152900";
+				times[13] = "153000";
+			
+				PreparedStatement insStockData = null;
+				
+				for (String tim : times) {
+					String[] params1 = new String[2];
+					params1[0] = pd;
+					params1[1] = tim;
+
+					QueryExecutor upl2 = new QueryExecutor(hdb, "FHKST03010200", aToken, key, params1);
+					JsonObject output2 = upl2.executeQuery();
+
+					JsonArray outputArray2 = output2.getAsJsonArray("output2");
+
+					
+					for (JsonElement element : outputArray2) {
+						JsonObject item = element.getAsJsonObject();
+
+						String stck_bsop_date = item.get("stck_bsop_date").getAsString(); // 주식 영업 일자
+						String stck_cntg_hour = item.get("stck_cntg_hour").getAsString(); // 시간
+						//String stck_oprc = item.get("stck_oprc").getAsString(); // 시가
+						String stck_prpr = item.get("stck_prpr").getAsString(); // 종가
+						//String stck_hgpr = item.get("stck_hgpr").getAsString(); // 고가
+						//String stck_lwpr = item.get("stck_lwpr").getAsString(); // 저기
+						//String cntg_vol = item.get("cntg_vol").getAsString(); // 거래량
+
+						//System.out.println(pd + "  " + stck_bsop_date + " " + stck_cntg_hour + " " + stck_prpr);
+						
+						insStockData = getConnection().prepareStatement(
+								"INSERT STOCK_DATA VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE price = ?");
+						insStockData.setString(1, pd);
+						insStockData.setString(2, stck_bsop_date);
+						insStockData.setString(3, stck_cntg_hour);
+						insStockData.setInt(4, Integer.valueOf(stck_prpr));
+						insStockData.setInt(5, Integer.valueOf(stck_prpr));
+
+						insStockData.executeUpdate();
+					}
+
+				}
+				
+				getConnection().commit();
+				insStockData.close();
+						
 			}
 			
 			resultSet.close();
 			pstmt.close();
+			
 		} catch (Exception e) {
 			System.err.println(e);
+			e.printStackTrace();
 		}
-		
-		
-		
-		
-		
-
-		
 	}
 	
 }
