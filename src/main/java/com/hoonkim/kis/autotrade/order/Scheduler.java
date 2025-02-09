@@ -189,8 +189,10 @@ public class Scheduler {
 	public void cron() throws Exception {
 
 		if (LocalTime.getDayofWeek().toUpperCase().equals("SAT")
-				|| LocalTime.getDayofWeek().toUpperCase().equals("SUN"))
+				|| LocalTime.getDayofWeek().toUpperCase().equals("SUN")) {
+			if (!getConnection().isClosed()) getConnection().close();
 			System.exit(0);
+		}
 
 		String ts = LocalTime.getLocalTime();
 		int ti = Integer.valueOf(ts);
@@ -203,10 +205,14 @@ public class Scheduler {
 				printed = true;
 			}
 
-			checkBuySchedule();
-
-			checkSellOrder();
-			checBuyOrder();
+			checkBuySchedule();			// 주식 주문 
+			
+			checkSellOrder();			// 매도 주문  결과 업데이트
+			checBuyOrder();				// 메수 주문  결과 업데이트
+			
+			checkOrderStatus();		// 주식정정취소가능주문조회
+			
+			System.out.println("매수가능 : " + getAccountOrderAmount());				// 2025/02/09   위치 이동시킴.  Cron 메서드에서 1회만 실행
 			
 			while (true) {
 				String tcs = LocalTime.getLocalTime();
@@ -269,8 +275,9 @@ public class Scheduler {
 			//JsonObject item = element.getAsJsonObject();
 			// System.out.println("예수금 : " + item.get("dnca_tot_amt").getAsString());
 		//}
-		System.out.println("매수가능 : " + getAccountOrderAmount());
+		//System.out.println("매수가능 : " + getAccountOrderAmount());			// 2025/02/09   위치 이동시킴.  Cron 메서드에서 1회만 실행
 
+		/*  주식정정취소가능주문조회      2025/02/09  위치 이동 Cron job내에서 1회만 실행
 		params = new String[2];
 		params[0] = new String(Account.getAccountNo());
 		params[1] = new String("01");
@@ -294,7 +301,34 @@ public class Scheduler {
 					+ ord_unpr + " / " + tot_ccld_qty + " / " + Scheduler.getCurrentStockPrice(pdno, aToken, key, hdb));
 
 		}
+		*/
 
+	}
+	
+	void checkOrderStatus () {			// 2025/02/09   메서드 생성 .  Cron 메서드에서 1회만 실행 
+		String[] params = new String[2];
+		params[0] = new String(Account.getAccountNo());
+		params[1] = new String("01");
+		QueryExecutor upl3 = new QueryExecutor(hdb, "TTTC8036R", aToken, key, params);
+		JsonObject jsonObject = upl3.executeQuery();
+
+		System.out.println("\n << 주식정정취소가능주문조회 >>");
+
+		JsonArray outputArray1 = jsonObject.getAsJsonArray("output");
+		for (JsonElement element : outputArray1) {
+			JsonObject item = element.getAsJsonObject();
+
+			String pdno = item.get("pdno").getAsString(); // 상품번호
+			String prdt_name = item.get("prdt_name").getAsString(); // 상품명
+			String rvse_cncl_dvsn_name = item.get("rvse_cncl_dvsn_name").getAsString(); // 정정취소구분명
+			String ord_qty = item.get("ord_qty").getAsString(); // 주문수량
+			String ord_unpr = item.get("ord_unpr").getAsString(); // 주문가격
+			String tot_ccld_qty = item.get("tot_ccld_qty").getAsString(); // 총체결수량
+
+			System.out.println(pdno + " / " + prdt_name + " / " + rvse_cncl_dvsn_name + " / " + ord_qty + " / "
+					+ ord_unpr + " / " + tot_ccld_qty + " / " + Scheduler.getCurrentStockPrice(pdno, aToken, key, hdb));
+
+		}
 	}
 
 	int getAccountOrderAmount() {
