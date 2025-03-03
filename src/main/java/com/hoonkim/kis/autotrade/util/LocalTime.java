@@ -31,6 +31,13 @@ public class LocalTime {
         return formattedKoreaTime;
 	}
 	
+	public static LocalDateTime getLocalDateTime2 () {
+        // Get the current time in Korea
+		 ZoneId koreaZone = ZoneId.of("Asia/Seoul");
+	     LocalDateTime now = ZonedDateTime.now(koreaZone).toLocalDateTime();
+	     return now;
+	}
+	
 	public static String getLocalDateTime14 () {
         // Get the current time in Korea
         ZonedDateTime koreaTime = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));

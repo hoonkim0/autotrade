@@ -17,6 +17,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Hashtable;
 
 public class Scheduler {
@@ -49,13 +53,14 @@ public class Scheduler {
 		try {
 
 			PreparedStatement pstmt = getConnection().prepareStatement(
-					"INSERT INTO SCHEDULE (SCHEDULETIME, PDNO, RPT, DELAY, LMT, QTY) VALUES (?,?,?,?,?,?)");
+					"INSERT INTO SCHEDULE (SCHEDULETIME, PDNO, RPT, DELAY, LMT, QTY, BUDGET) VALUES (?,?,?,?,?,?,?)");
 			pstmt.setTimestamp(1, Timestamp.valueOf(stimestamp));
 			pstmt.setString(2, pdno);
 			pstmt.setInt(3, rpt);
 			pstmt.setInt(4, dly);
 			pstmt.setInt(5, limit);
 			pstmt.setInt(6, qty);
+			pstmt.setInt(7, 0);
 
 			pstmt.execute();
 
@@ -122,7 +127,8 @@ public class Scheduler {
 		try {
 
 			PreparedStatement pstmt = getConnection().prepareStatement(
-					"SELECT SCHEDULETIME, PDNO, RPT, DELAY, LMT, QTY FROM SCHEDULE WHERE SCHEDULETIME < ? FOR UPDATE");
+					"SELECT SCHEDULETIME, PDNO, RPT, DELAY, LMT, QTY, BUDGET FROM SCHEDULE WHERE SCHEDULETIME < ? FOR UPDATE");
+					//"SELECT S.SCHEDULETIME, S.PDNO, S.RPT, S.DELAY, S.LMT, S.QTY, S.BUDGET, SUM(O.QTY*O.BPRICE) FROM SCHEDULE S, ORDERS O WHERE S.PDNO = O.PDNO AND S.SCHEDULETIME < ? AND O.BCOMPLETE = 'X' AND O.SCOMPLETE IS NULL GROUP BY O.PDNO;");
 			pstmt.setTimestamp(1, Timestamp.valueOf(ltimestamp));
 
 			ResultSet resultSet = pstmt.executeQuery();
@@ -134,13 +140,40 @@ public class Scheduler {
 				int delay = resultSet.getInt(4);
 				int lmt = resultSet.getInt(5);
 				int qty = resultSet.getInt(6);
-
+				int budget = resultSet.getInt(7);
+				
+				
+				int pdBalance = 0;
+				
+				PreparedStatement pstmt1 = getConnection().prepareStatement(
+						"SELECT SUM(O.QTY*O.BPRICE) FROM ORDERS O WHERE O.PDNO = ? AND O.BCOMPLETE = 'X' AND O.SCOMPLETE IS NULL");
+				pstmt1.setString(1, pd);
+				ResultSet resultSet1 = pstmt1.executeQuery();
+				while (resultSet1.next() ) {
+					pdBalance = resultSet1.getInt(1);
+				}
+				resultSet1.close();
+				pstmt1.close();
+				
+				int cPrice = getCurrentStockPrice(pd, aToken, key, hdb);
+				
+				if (budget <= 0) budget = Integer.MAX_VALUE;
+				if (pdBalance <= 0) pdBalance = 0;
+			
 				String ordNo = new String("");
-				if (lmt != 0) {
-					if (getCurrentStockPrice(pd, aToken, key, hdb) < lmt)
+				
+				if ( (cPrice * qty) + pdBalance < budget) {
+					if (lmt != 0) {
+						if (cPrice < lmt) {
+							ordNo = placeBuyOrder(pd, Integer.valueOf(qty).toString());
+						} else {
+							System.out.println ("*** Order Skip : Limit exceeded " + pd + " / " + cPrice + " / " + lmt);
+						}
+					} else {
 						ordNo = placeBuyOrder(pd, Integer.valueOf(qty).toString());
+					}
 				} else {
-					ordNo = placeBuyOrder(pd, Integer.valueOf(qty).toString());
+					System.out.println ("*** Order Skip : Budget exceeded " + pd + " / " + pdBalance + " / " + qty + " / " + budget);
 				}
 
 				if (!ordNo.equals("")) {
@@ -158,11 +191,13 @@ public class Scheduler {
 						dstmt.close();
 						getConnection().commit();
 					} else {
+						LocalDateTime ltime = LocalTime.getLocalDateTime2();
+						int adjustedDelay = getAdjustedNextTime(ltime,delay);
 						PreparedStatement ustmt = getConnection().prepareStatement(
 								"UPDATE SCHEDULE SET SCHEDULETIME = DATE_ADD(?, INTERVAL ? MINUTE), " + " RPT = RPT - 1"
 										+ " WHERE SCHEDULETIME = ? AND PDNO = ? AND RPT = ? AND DELAY = ? AND LMT = ? AND QTY = ?");
-						ustmt.setTimestamp(1, Timestamp.valueOf(ltimestamp));
-						ustmt.setInt(2, delay);
+						ustmt.setTimestamp(1, Timestamp.valueOf(ltime));
+						ustmt.setInt(2, adjustedDelay);
 						ustmt.setTimestamp(3, ts);
 						ustmt.setString(4, pd);
 						ustmt.setInt(5, rpt);
@@ -177,6 +212,7 @@ public class Scheduler {
 
 			}
 
+			resultSet.close();
 			pstmt.close();
 			// getConnection().close();
 
@@ -186,12 +222,71 @@ public class Scheduler {
 		}
 	}
 
+	public  int getAdjustedNextTime(LocalDateTime now, int min) {
+		LocalDateTime nowp60 = now.plusMinutes(min); // Get Korea time and add 60 minutes
+
+		if (nowp60.toLocalTime().isBefore(java.time.LocalTime.of(9, 0))) {
+			nowp60 = nowp60.withHour(9);
+		}
+		
+		if (nowp60.toLocalTime().isAfter(java.time.LocalTime.of(15, 19))) {
+			nowp60 = nowp60.plusDays(1);
+			nowp60 = nowp60.withHour(9);
+			nowp60 = nowp60.withMinute(0);
+		}
+		
+		nowp60 = checkHoliday (nowp60);
+		
+		return (int) ChronoUnit.MINUTES.between(now, nowp60);
+	}
+
+	public LocalDateTime checkHoliday(LocalDateTime now) {
+
+		if (now.getDayOfWeek() == DayOfWeek.SATURDAY || now.getDayOfWeek() == DayOfWeek.SUNDAY) {
+
+			now = now.plusDays(1);
+			return checkHoliday(now);
+
+		} else if (isHoliday(now.format(DateTimeFormatter.ofPattern("yyyyMMdd")))) {
+			now = now.plusDays(1);
+			return checkHoliday(now);
+		}
+
+		return now;
+	}
+	
+	public boolean isHoliday() {
+		
+		return isHoliday ( LocalTime.getLocalDateTime2().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+	}
+
+
+	public boolean isHoliday(String dateStr) {
+		
+		boolean rtn = false;
+		try {
+			PreparedStatement pstmt = getConnection().prepareStatement("SELECT * FROM HOLIDAYS WHERE DATE = ?");
+			pstmt.setString(1, dateStr);
+			ResultSet resultSet = pstmt.executeQuery();
+			while (resultSet.next()) {
+				rtn = true;
+			}
+			resultSet.close();
+			pstmt.close();
+		} catch (Exception e) {
+		}
+		return rtn;
+	}
+
 	public void cron() throws Exception {
 
-		if (LocalTime.getDayofWeek().toUpperCase().equals("SAT")
+		if (isHoliday() 
+				|| LocalTime.getDayofWeek().toUpperCase().equals("SAT")
 				|| LocalTime.getDayofWeek().toUpperCase().equals("SUN")) {
+			
 			if (!getConnection().isClosed()) getConnection().close();
 			System.exit(0);
+			
 		}
 
 		String ts = LocalTime.getLocalTime();
